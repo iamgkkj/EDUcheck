@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}"> {# Using course.css for card styling #}
+<style>
+    .attendance-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .face-reg-status .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+    }
+     .face-reg-status .btn[disabled] {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.65;
+     }
+    .attendance-course-card { /* Reuse teacher style */
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .course-card-header { /* Reuse teacher style */
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .course-card-header h3 {
+        margin: 0;
+        color: #333;
+        flex-grow: 1;
+    }
+     .course-details p {
+        margin: 0 0 0.3rem 0;
+        color: #555;
+        font-size: 0.9rem;
+    }
+    .attendance-action {
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+    .attendance-action .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    .attendance-action .btn-mark {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    .attendance-action .btn-mark:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+     .attendance-action .status-text {
+        font-style: italic;
+        color: #6c757d;
+        font-size: 0.9em;
+     }
+     .attendance-action .status-text.marked {
+        color: #28a745;
+        font-weight: bold;
+     }
+     .attendance-action .status-text.inactive {
+        color: #dc3545;
+     }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {# Include the standard student sidebar #}
+    <aside class="sidebar">
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item">
+                <span class="material-icons">class</span> Classes
+            </a>
+            <a href="{{ url_for('student_routes.manage_attendance') }}" class="nav-item active"> {# Active Link #}
+                <span class="material-icons">how_to_reg</span> Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">forum</span> Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="attendance-header">
+            <h1>Attendance</h1>
+            <div class="face-reg-status">
+                {% if face_registered %}
+                    <button class="btn btn-secondary" disabled>
+                        <span class="material-icons">check_circle</span> Face ID Registered
+                    </button>
+                {% else %}
+                    <a href="{{ url_for('student_routes.face_register_page') }}" class="btn btn-primary">
+                        <span class="material-icons">face</span> Register Face ID
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <p>Mark your attendance for active sessions using facial recognition.</p>
+
+        {# Display Flash Messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages" style="margin-bottom: 1rem;">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if courses_status %}
+            {% for status in courses_status %}
+            <div class="attendance-course-card">
+                <div class="course-card-header">
+                    <h3>{{ status.course.name }}</h3>
+                </div>
+                <div class="course-details">
+                    <p>Class: {{ status.course.class_number }} | Teacher: {{ status.course.teacher.username }}</p>
+                </div>
+                <div class="attendance-action">
+                    {% if status.session_active %}
+                        {% if status.already_marked %}
+                            <span class="status-text marked">
+                                <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">check_circle</span> Marked Present for this session
+                            </span>
+                        {% else %}
+                            <a href="{{ url_for('student_routes.mark_attendance_page', course_id=status.course.id) }}" class="btn btn-mark">
+                                <span class="material-icons">visibility</span> Mark Attendance
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="status-text inactive">
+                             <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">cancel</span> Attendance not active
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>You are not enrolled in any courses yet. Go to the 'Classes' section to join a class.</p>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}

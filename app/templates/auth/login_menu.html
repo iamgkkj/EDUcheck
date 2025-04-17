@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    .login-options {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .login-option {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        width: 220px;
+        text-align: center;
+        padding: 25px 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: #333;
+    }
+    
+    .login-option:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .login-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #5c6bc0;
+    }
+    
+    .login-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .login-description {
+        font-size: 14px;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card" style="width: 700px; max-width: 90%;">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/5442091.png') }}" alt="EDUcheck Logo" class="auth-logo">
+            <h2>Choose Login Type</h2>
+        </div>
+        <div class="auth-body">
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+            
+            <div class="login-options">
+                <a href="{{ url_for('auth.login', role='student') }}" class="login-option">
+                    <div class="login-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="login-title">Student</div>
+                    <div class="login-description">Access your courses, assignments, and grades</div>
+                </a>
+                
+                <a href="{{ url_for('auth.login', role='teacher') }}" class="login-option">
+                    <div class="login-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="login-title">Teacher</div>
+                    <div class="login-description">Manage your classes, assignments, and student grades</div>
+                </a>
+                
+                <a href="{{ url_for('auth.login', role='admin') }}" class="login-option">
+                    <div class="login-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="login-title">Administrator</div>
+                    <div class="login-description">Manage users, courses, and system settings</div>
+                </a>
+            </div>
+        </div>
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+{% endblock %}

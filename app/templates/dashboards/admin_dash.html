@@ -1,0 +1,29 @@
+{% extends "dashboards/base.html" %}
+{% block content %}
+<div class="admin-dashboard">
+    <div class="countdown-management">
+        <h2>Manage Countdown Events</h2>
+        <form id="countdown-form">
+            <input type="text" id="event-title" placeholder="Event Title" required>
+            <input type="datetime-local" id="event-date" required>
+            <select id="event-type">
+                <option value="academic">Academic</option>
+                <option value="event">College Event</option>
+                <option value="assignment">Assignment</option>
+            </select>
+            <button type="submit">Add Event</button>
+        </form>
+        
+        <div class="current-events">
+            {% for event in events %}
+            <div class="event-card">
+                <h3>{{ event.title }}</h3>
+                <p class="event-timer" data-date="{{ event.date }}"></p>
+                <button class="edit-event" data-id="{{ event.id }}">Edit</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/admin_countdown.js') }}"></script>
+{% endblock %}

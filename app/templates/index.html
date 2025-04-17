@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block title %}EDUcheck - Education Management System{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <img src="{{ url_for('static', filename='images/5442091.png') }}" alt="EDUcheck Logo" style="width: 120px; margin-bottom: 20px;">
+        <h1 class="hero-title">Welcome to EDUcheck</h1>
+        <p class="hero-subtitle">A comprehensive education management system designed to streamline communication between students, teachers, and administrators.</p>
+        <a href="{{ url_for('auth.login') }}" class="btn">Get Started</a>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="feature-title">User Management</h3>
+                <p class="feature-description">Easily manage students, teachers, and administrators with role-based access control.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3 class="feature-title">Course Management</h3>
+                <p class="feature-description">Create and manage courses, assignments, and grades in one centralized platform.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 class="feature-title">Communication</h3>
+                <p class="feature-description">Facilitate communication between students and teachers with built-in messaging.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

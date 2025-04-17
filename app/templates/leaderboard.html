@@ -1,0 +1,24 @@
+{% extends "dashboards/base.html" %}
+{% block content %}
+<div class="leaderboard-container">
+    <h2>Class Leaderboard</h2>
+    <table class="leaderboard-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Student</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in leaderboard %}
+            <tr class="{% if entry.student.id == current_user.id %}highlight{% endif %}">
+                <td>{{ loop.index }}</td>
+                <td>{{ entry.student.username }}</td>
+                <td>{{ entry.score }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+# Core Flask Framework and Extensions
+Flask==3.0.2                    # Main web framework
+Flask-SQLAlchemy==3.1.1         # Database ORM
+Flask-Login==0.6.3              # User session management
+Flask-WTF==1.2.1                # Form handling and CSRF protection
+Flask-SocketIO==5.3.6           # Real-time WebSocket communication
+Flask-Migrate==4.0.5            # Database migration management
+Flask-Mail==0.9.1               # Email functionality
+Werkzeug==3.0.1                 # WSGI utilities and password hashing
+
+# Database and ORM
+SQLAlchemy==2.0.25              # SQL toolkit and ORM
+alembic==1.13.1                 # Database migration tool
+
+# Security and Authentication
+itsdangerous==2.1.2             # Security signing for Flask
+python-jose==3.3.0              # JWT token handling
+bcrypt==4.1.2                   # Password hashing
+
+# Form Validation and Data Processing
+email-validator==2.1.1          # Email validation
+python-dateutil==2.9.0.post0    # Date handling utilities
+WTForms==3.1.2                  # Form validation
+
+# File and Image Processing
+Pillow==10.3.0                  # Image processing
+python-magic==0.4.27            # File type detection
+
+# Real-time Communication
+eventlet==0.35.1                # Async framework for SocketIO
+python-socketio==5.11.1         # SocketIO implementation
+
+# Development and Utilities
+python-dotenv==1.0.1            # Environment variable management
+pytest==7.4.4                   # Testing framework
+black==24.1.1                   # Code formatting
+flake8==7.0.0                   # Code linting

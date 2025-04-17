@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}{{ course.name }} - Course View{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Use course.css for general course layout and specific styles #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}">
+<style>
+    /* Additional styles specific to this page if needed */
+    .tab-content h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #444;
+    }
+    .assignment-item, .announcement-item, .material-item {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border: 1px solid #eee;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .assignment-item h4, .announcement-item h4, .material-item h4 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        color: #333;
+    }
+    .assignment-item p, .announcement-item p, .material-item p {
+        margin: 0 0 0.5rem;
+        color: #666;
+        font-size: 0.95rem;
+    }
+     .assignment-item small, .announcement-item small, .material-item small {
+        color: #888;
+        font-size: 0.85rem;
+    }
+    .assignment-item a.btn-primary, .material-item a.btn-secondary {
+        text-decoration: none;
+        margin-top: 0.5rem;
+        display: inline-block; /* Fit content */
+        padding: 0.5rem 1rem; /* Smaller padding */
+        font-size: 0.9rem;
+    }
+    .material-item a.btn-secondary {
+         background-color: #6c757d;
+         border-color: #6c757d;
+    }
+     .material-item a.btn-secondary:hover {
+         background-color: #5a6268;
+         border-color: #545b62;
+     }
+    .course-info p {
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+     .course-info strong {
+        color: #333;
+     }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {# Include the standard student sidebar #}
+    <aside class="sidebar">
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            {# Keep 'Classes' active as we are viewing a specific class #}
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item active">
+                <span class="material-icons">class</span> Classes
+            </a>
+            <a href="#attendance" class="nav-item"> {# Link attendance section later #}
+                <span class="material-icons">how_to_reg</span> Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">forum</span> Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    {# Main content area for viewing the course #}
+    <main class="main-content">
+        <div class="course-container">
+            <div class="course-header">
+                <h1>{{ course.name }}</h1>
+                <div class="course-info">
+                    <p><strong>Teacher:</strong> {{ course.teacher.username }}</p>
+                    <p><strong>Class Number:</strong> {{ course.class_number }} | <strong>Session:</strong> {{ course.session }} | <strong>Semester:</strong> {{ course.semester }}</p>
+                    {% if course.meet_code %}
+                        <p><strong>Meet Link:</strong> <a href="{{ course.meet_code }}" target="_blank">{{ course.meet_code }}</a></p>
+                    {% endif %}
+                    {# Actions including Chat, Rank, Attendance #}
+                    <div class="course-actions" style="margin-top: 1rem; border-top: none; padding-top: 0; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                        {# Changed btn-secondary to btn-primary #}
+                        <a href="{{ url_for('chat_routes.start_or_get_chat', teacher_id=course.teacher_id) }}" class="btn btn-primary">
+                            <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">forum</span> Chat with Teacher
+                        </a>
+                        {# --- RANK/ATTENDANCE INFO --- #}
+                        <div class="course-stat-item" title="Your rank in this course based on grades">
+                            <span class="material-icons" style="vertical-align: middle; color: #ffc107;">emoji_events</span>
+                            Rank: <span class="stat-value">{{ student_rank_in_course | default('N/A') }}</span>
+                        </div>
+                        <div class="course-stat-item" title="Your attendance percentage for this course">
+                            <span class="material-icons" style="vertical-align: middle; color: #28a745;">check_circle_outline</span>
+                            Attendance: <span class="stat-value">{{ student_attendance_percent | default('N/A') }}%</span>
+                        </div>
+                        {# --- END OF RANK/ATTENDANCE INFO --- #}
+                    </div>
+                        {# --- END OF RANK/ATTENDANCE INFO --- #}
+                    </div>
+                </div>
+            </div>
+
+            {# Tabs similar to teacher view #}
+            <div class="course-tabs">
+                <button class="tab-button active" onclick="openTab(event, 'assignments')">Assignments</button>
+                <button class="tab-button" onclick="openTab(event, 'announcements')">Announcements</button>
+                <button class="tab-button" onclick="openTab(event, 'materials')">Materials</button>
+            </div>
+
+            <div id="assignments" class="tab-content active">
+                <h3>Assignments</h3>
+                {% if assignments %}
+                    {% for assignment in assignments %}
+                    <div class="assignment-item">
+                        <h4>{{ assignment.title }}</h4>
+                        <p>{{ assignment.description | safe }}</p> {# Use safe if description contains HTML #}
+                        <small>Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') if assignment.due_date else 'No due date' }}</small>
+                        <br>
+                        {# Add logic to show submission status and link #}
+                        {% set submission = assignment.submissions.filter_by(student_id=current_user.id).first() %}
+                        {% if submission %}
+                            <small>Submitted on: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            {% if submission.grade %}
+                                <p style="color: green; margin-top: 5px;"><strong>Grade: {{ submission.grade }}</strong></p>
+                            {% else %}
+                                <p style="color: orange; margin-top: 5px;">Grading pending</p>
+                            {% endif %}
+                             {# Add link to view submission details if needed #}
+                        {% else %}
+                             {# Add link/form to submit assignment - Requires new route/template #}
+                             <a href="{{ url_for('student_routes.submit_assignment_page', assignment_id=assignment.id) }}" class="btn btn-primary" style="margin-top: 10px;">Submit Assignment</a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No assignments posted for this course yet.</p>
+                {% endif %}
+            </div>
+
+            <div id="announcements" class="tab-content">
+                <h3>Announcements</h3>
+                 {% if announcements %}
+                    {% for announcement in announcements %}
+                    <div class="announcement-item">
+                        <h4>{{ announcement.title }}</h4>
+                        <p>{{ announcement.content | safe }}</p> {# Use safe if content contains HTML #}
+                        <small>Posted: {{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No announcements for this course yet.</p>
+                {% endif %}
+            </div>
+
+            <div id="materials" class="tab-content">
+                <h3>Materials</h3>
+                 {% if materials %}
+                    {% for material in materials %}
+                    <div class="material-item">
+                        <h4>{{ material.title }}</h4>
+                        <p>{{ material.description | safe }}</p> {# Use safe if description contains HTML #}
+                        <small>Uploaded: {{ material.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        <br>
+                        <a href="{{ url_for('static', filename=material.file_path) }}" class="btn btn-secondary" download style="margin-top: 10px;">
+                             <span class="material-icons" style="vertical-align: middle;">download</span> Download Material
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No materials uploaded for this course yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function openTab(evt, tabName) {
+  // Get all elements with class="tab-content" and hide them
+  var tabcontent = document.getElementsByClassName("tab-content");
+  for (var i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+    tabcontent[i].classList.remove("active");
+  }
+
+  // Get all elements with class="tab-button" and remove the class "active"
+  var tablinks = document.getElementsByClassName("tab-button");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].classList.remove("active");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = "block";
+  document.getElementById(tabName).classList.add("active");
+  evt.currentTarget.classList.add("active");
+}
+
+// Optional: Initialize the first tab on load
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Click the first tab button to initialize
+    document.querySelector('.tab-button.active').click(); 
+});
+</script>
+{% endblock %}

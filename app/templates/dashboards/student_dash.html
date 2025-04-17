@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Add specific dashboard styles if needed, or ensure they are in main.css #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<style>
+    /* Add any specific styles for student_dash.html here if necessary */
+    .dashboard-right {
+        /* Styles for the right content area if needed */
+    }
+    .countdown-card, .unsubmitted-assignments, .announcements {
+        /* Ensure these sections have appropriate styling */
+        margin-bottom: 1.5rem;
+    }
+    /* Make sure assignment/announcement item styles are available */
+    .assignment-item, .announcement-item {
+         background: #fff;
+         padding: 1rem 1.5rem;
+         border-radius: 6px;
+         margin-bottom: 1rem;
+         border: 1px solid #eee;
+    }
+     .assignment-item h4, .announcement-item h4 {
+        margin: 0 0 0.5rem 0;
+     }
+     .assignment-item p, .announcement-item p {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.95rem;
+        color: #555;
+     }
+     .assignment-item small, .announcement-item small {
+        font-size: 0.85rem;
+        color: #777;
+     }
+     /* Add styles for countdown timer if not in main.css */
+    .countdown-timer {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .timer-unit {
+        text-align: center;
+        background-color: #f0f4f8;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+    }
+    .timer-unit .number {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #5c6bc0;
+    }
+    .timer-unit .label {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    .countdown-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+     .countdown-header h3 {
+        margin: 0;
+     }
+     .countdown-header .material-icons {
+        color: #5c6bc0;
+     }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav">
+            {# Assignments Link (Points to Dashboard) #}
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item {% if request.endpoint == 'student_routes.student_dashboard' %}active{% endif %}">
+                <span class="material-icons">assignment</span>
+                Assignments
+            </a>
+            {# Classes Link #}
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item {% if request.endpoint == 'student_routes.student_classes' %}active{% endif %}">
+                <span class="material-icons">class</span>
+                Classes
+            </a>
+            {# --- CORRECTED Attendance Link --- #}
+            <a href="{{ url_for('student_routes.manage_attendance') }}" class="nav-item {% if request.endpoint == 'student_routes.manage_attendance' %}active{% endif %}">
+                <span class="material-icons">how_to_reg</span>
+                Attendance
+            </a>
+            {# Chat Link #}
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item {% if request.endpoint.startswith('chat_routes.') %}active{% endif %}">
+                <span class="material-icons">forum</span>
+                Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            {# Profile Link #}
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item {% if request.endpoint == 'student_routes.student_profile' %}active{% endif %}">
+                <span class="material-icons">person</span>
+                Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        {# --- Existing Dashboard Content --- #}
+        {# Make sure variables like unsubmitted_assignments are passed if needed #}
+        <div class="dashboard-right">
+            {# Example Countdown - Ensure data-date is passed or handled #}
+            <div class="countdown-card">
+                 <div class="countdown-header">
+                    <h3>Upcoming Deadline</h3>
+                    <span class="material-icons">schedule</span>
+                </div>
+                <div id="countdown" class="countdown-timer" data-date="2025-12-31 23:59:59"> {# Example Date #}
+                    <div class="timer-unit">
+                        <span class="number" id="days">--</span><span class="label">Days</span>
+                    </div>
+                    <div class="timer-unit">
+                        <span class="number" id="hours">--</span><span class="label">Hours</span>
+                    </div>
+                    <div class="timer-unit">
+                        <span class="number" id="minutes">--</span><span class="label">Minutes</span>
+                    </div>
+                    <div class="timer-unit">
+                        <span class="number" id="seconds">--</span><span class="label">Seconds</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Example Assignments - Ensure unsubmitted_assignments is passed from route #}
+            <section class="unsubmitted-assignments card"> {# Added card class #}
+                 <div class="countdown-header">
+                    <h3>Unsubmitted Assignments</h3>
+                    <span class="material-icons">assignment_late</span>
+                </div>
+                <div class="assignments-list">
+                    {% set unsubmitted_assignments = [] %} {# Placeholder - pass actual data from route #}
+                    {% if unsubmitted_assignments %}
+                        {% for assignment in unsubmitted_assignments %}
+                        <div class="assignment-item">
+                            <h4>{{ assignment.title }}</h4>
+                            <p>Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') if assignment.due_date else 'N/A' }}</p>
+                            {# Link to submit page #}
+                            <a href="{{ url_for('student_routes.submit_assignment_page', assignment_id=assignment.id) }}" class="btn btn-primary btn-sm">Submit Now</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No assignments due.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+             {# Example Announcements - Ensure new_announcements is passed from route #}
+            <section class="announcements card"> {# Added card class #}
+                 <div class="countdown-header">
+                    <h3>New Announcements</h3>
+                    <span class="material-icons">campaign</span>
+                </div>
+                <div class="announcements-list">
+                     {% set new_announcements = [] %} {# Placeholder - pass actual data from route #}
+                    {% if new_announcements %}
+                        {% for announcement in new_announcements %}
+                        <div class="announcement-item">
+                            <h4>{{ announcement.title }}</h4>
+                            <p>{{ announcement.content }}</p>
+                            <small>Posted: {{ announcement.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                         <p>No new announcements.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+         {# --- End Existing Dashboard Content --- #}
+    </main>
+</div>
+
+{# Include countdown.js if the countdown feature is active #}
+{# <script src="{{ url_for('static', filename='js/countdown.js') }}"></script> #}
+{% endblock %}
+
+{% block scripts %}
+ {{ super() }}
+ {# Add specific JS for dashboard if needed #}
+ {% if request.endpoint == 'student_routes.student_dashboard' %}
+    {# Include countdown script only if on the dashboard page #}
+    {# <script src="{{ url_for('static', filename='js/countdown.js') }}"></script> #}
+ {% endif %}
+{% endblock %}

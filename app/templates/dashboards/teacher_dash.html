@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="user-card"> {# Using user-card consistently #}
+            <div class="avatar">
+                {% if current_user.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile Picture">
+                {% else %}
+                    <span class="material-icons">account_circle</span>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="role-badge">Teacher</p> {# Assuming role-badge class exists #}
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+             {# Link to main dashboard #}
+            <a href="{{ url_for('teacher_routes.teacher_dashboard') }}" class="nav-item {% if request.endpoint == 'teacher_routes.teacher_dashboard' %}active{% endif %}">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+            {# Corrected Attendance Link #}
+            <a href="{{ url_for('teacher_routes.manage_attendance') }}" class="nav-item {% if request.endpoint == 'teacher_routes.manage_attendance' %}active{% endif %}">
+                <span class="material-icons">schedule</span> Attendance
+            </a>
+            {# Placeholder for Assignments Link - Update if you create a dedicated page #}
+            <a href="#assignments" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item {% if request.endpoint.startswith('chat_routes.') %}active{% endif %}">
+                <span class="material-icons">chat</span> Chat
+            </a>
+            <a href="{{ url_for('teacher_routes.profile') }}" class="nav-item {% if request.endpoint == 'teacher_routes.profile' %}active{% endif %}">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        {# Display Flash Messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages" style="margin-bottom: 1rem;">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {# --- Attendance Section --- #}
+        {# Removed id="attendance" as it's better to navigate via links #}
+        <div class="dashboard-section">
+            <h2>Attendance Management</h2>
+            <p>Start/stop attendance sessions or view/modify records.</p>
+            <div class="attendance-actions" style="margin-top: 1rem;">
+                 {# Button now links directly to the manage attendance page #}
+                <button class="btn-primary" onclick="location.href='{{ url_for('teacher_routes.manage_attendance') }}'">
+                    <span class="material-icons" style="vertical-align: middle;">schedule</span> Manage Attendance Sessions
+                </button>
+                {# You might add other quick actions here later #}
+            </div>
+        </div>
+
+        {# --- Courses Section --- #}
+        {# Removed id="courses" #}
+        <div class="dashboard-section">
+            <h2>My Courses</h2>
+            <div class="course-actions" style="margin-bottom: 1rem;">
+                <button class="btn-primary" onclick="location.href='{{ url_for('teacher_routes.create_course') }}'">
+                    <span class="material-icons" style="vertical-align: middle;">add_circle_outline</span> Create New Course
+                </button>
+            </div>
+            <div class="courses-list"> {# Assuming .courses-list and .course-card styles exist #}
+                {% if courses %}
+                    {% for course in courses %}
+                    <div class="course-card"> {# Use course-card for consistency #}
+                        <div class="course-card-header">
+                            <h3>{{ course.name }}</h3>
+                             {# Link to the specific course page #}
+                            <button class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="location.href='{{ url_for('teacher_routes.course_page', course_id=course.id) }}'">
+                                View Course
+                            </button>
+                        </div>
+                        <p>Class: {{ course.class_number }} | Session: {{ course.session }}</p>
+                        <p>Class Code: <span style="font-family: monospace; background-color: #f0f0f0; padding: 2px 5px; border-radius: 3px;">{{ course.class_code }}</span></p>
+                         {# Add link to manage attendance for this specific course #}
+                         <a href="{{ url_for('teacher_routes.manage_attendance') }}" class="btn btn-secondary" style="margin-top: 10px; padding: 0.4rem 0.8rem; font-size: 0.85rem;">Manage Attendance</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No courses created yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# --- Assignments Section --- #}
+        {# Removed id="assignments" #}
+        <div class="dashboard-section">
+            <h2>Recent Assignments</h2>
+             {# Add link to create assignment page or within course page #}
+            <div class="assignments-list">
+                {% if assignments %}
+                    {% for assignment in assignments | sort(attribute='created_at', reverse=True) | list | slice(0, 5) %} {# Show recent 5 #}
+                    <div class="assignment-card"> {# Assuming .assignment-card styles exist #}
+                        <h3>{{ assignment.title }}</h3>
+                        <p>Course: {{ assignment.course.name }}</p>
+                        <p>Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') if assignment.due_date else 'N/A' }}</p>
+                        {# Add link to view assignment details/submissions #}
+                        <a href="{{ url_for('teacher_routes.course_page', course_id=assignment.course_id) }}#assignments" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">View Details</a>
+                    </div>
+                    {% endfor %}
+                     {% if assignments|length > 5 %}
+                        <p style="text-align: center; margin-top: 1rem;"><a href="#">View All Assignments</a></p> {# Link to a future all assignments page #}
+                     {% endif %}
+                {% else %}
+                    <p>No assignments created yet. Go to a course page to create assignments.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

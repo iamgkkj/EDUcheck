@@ -1,0 +1,135 @@
+/* Styles for Student Profile Page - app/static/css/profile.css */
+
+/* Inherit general dashboard layout from main.css */
+
+.profile-container {
+    max-width: 900px; /* Or adjust as needed */
+    margin: 1rem auto;
+    padding: 0 1rem;
+}
+
+.profile-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.profile-pic-large {
+    width: 120px; /* Adjust size */
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background-color: #e0e0e0; /* Placeholder background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* To contain images */
+}
+
+.profile-pic-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-pic-large .material-icons {
+    font-size: 80px; /* Adjust icon size */
+    color: #757575; /* Placeholder icon color */
+}
+
+.profile-header h1 {
+    margin: 0.5rem 0;
+    color: #333;
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+/* Use existing .student-badge class from main.css */
+/* .role-badge.student-badge { ... } */
+
+.profile-details {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.detail-section h2 {
+    font-size: 1.3rem;
+    color: #5c6bc0; /* Theme color */
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+}
+
+.detail-item {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.detail-item label {
+    font-weight: 500;
+    color: #555;
+    width: 150px; /* Adjust as needed */
+    flex-shrink: 0;
+}
+
+.detail-item span {
+    color: #333;
+}
+
+.detail-item a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.detail-item a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.stat-item {
+    background-color: #f8f9fa;
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #5c6bc0; /* Theme color */
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+}

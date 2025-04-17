@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Create Course{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/5442091.png') }}" alt="EDUcheck Logo" class="auth-logo">
+            <h2>Create New Course</h2>
+        </div>
+        <div class="auth-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.name(class="form-control", placeholder=" ") }}
+                    {{ form.name.label(class="form-label") }}
+                    {% if form.name.errors %}
+                        <div class="error">
+                            {% for error in form.name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.course_code(class="form-control", placeholder=" ") }}
+                    {{ form.course_code.label(class="form-label") }}
+                    {% if form.course_code.errors %}
+                        <div class="error">
+                            {% for error in form.course_code.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.class_number(class="form-control", placeholder=" ") }}
+                    {{ form.class_number.label(class="form-label") }}
+                    {% if form.class_number.errors %}
+                        <div class="error">
+                            {% for error in form.class_number.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.semester(class="form-control", placeholder=" ") }}
+                    {{ form.semester.label(class="form-label") }}
+                    {% if form.semester.errors %}
+                        <div class="error">
+                            {% for error in form.semester.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.session(class="form-control", placeholder=" ") }}
+                    {{ form.session.label(class="form-label") }}
+                    {% if form.session.errors %}
+                        <div class="error">
+                            {% for error in form.session.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.submit(class="btn-primary", value="Create Class") }}
+                </div>
+            </form>
+        </div>
+        <div class="auth-footer">
+            <a href="{{ url_for('teacher_routes.teacher_dashboard') }}" class="btn-link">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

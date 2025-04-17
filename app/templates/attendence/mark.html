@@ -1,0 +1,12 @@
+{% extends "dashboards/base.html" %}
+{% block content %}
+<div class="attendance-container">
+    <div class="webcam-feed">
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <button id="mark-attendance" class="btn-material">Mark Attendance</button>
+    </div>
+    <div class="attendance-status" id="status"></div>
+</div>
+<script src="{{ url_for('static', filename='js/face_recognition.js') }}"></script>
+{% endblock %}

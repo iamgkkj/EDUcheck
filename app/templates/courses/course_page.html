@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}{{ course.name }} - Course Page{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}">
+<style>
+.course-code-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.course-code {
+    display: inline-block;
+    background-color: #f0f0f0;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-left: 12px;
+    font-size: 0.8em;
+    color: #666;
+}
+.copy-btn {
+    background: transparent;
+    color: #007bff;
+    border: none;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2em;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.copy-btn:hover {
+    color: #0056b3;
+}
+.copy-btn::after {
+    content: 'Copy Code';
+    position: absolute;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7em;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -25px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.copy-btn:hover::after {
+    opacity: 1;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 28px;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.date-time-container {
+    display: flex;
+    gap: 1rem;
+}
+
+.date-time-container .date-input,
+.date-time-container .time-input {
+    flex: 1;
+}
+
+.form-group input[type="date"],
+.form-group input[type="time"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.form-group .file-upload {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.form-group .file-upload input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.form-group .file-upload-label {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    background:rgb(27, 137, 248);
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.form-group .file-upload-label:hover {
+    background: #007bff;
+    border-color: #007bff; 
+}
+.submit-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="course-container">
+    <div class="course-header">
+        <h1>{{ course.name }} <div class="course-code-container"><span class="course-code">{{ course.class_code }}</span><button class="copy-btn" onclick="copyClassCode()"><i class="material-icons">content_copy</i></button></div></h1>
+        <p>Class: {{ course.class_number }} | Session: {{ course.session }}</p>
+    </div>
+
+    <div class="course-tabs">
+        <button class="tab-button active" onclick="openTab('students')">Students</button>
+        <button class="tab-button" onclick="openTab('assignments')">Assignments</button>
+        <button class="tab-button" onclick="openTab('announcements')">Announcements</button>
+        <button class="tab-button" onclick="openTab('materials')">Materials</button>
+    </div>
+
+    <div id="students" class="tab-content active">
+        <div class="student-list">
+            <h2>Enrolled Students</h2>
+            <div class="student-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Rank</th>
+                            <th>Attendance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in course.enrollments %}
+                        <tr>
+                            <td>{{ enrollment.student.username }}</td>
+                            <td>{{ enrollment.student.rank }}</td>
+                            <td>{{ enrollment.attendance_percentage }}%</td>
+                            <td>
+                                <button onclick="viewMarks('{{ enrollment.student.id }}')">Marks</button>
+                                <button onclick="modifyAttendance('{{ enrollment.student.id }}')">Attendance</button>
+                                <button onclick="openChat('{{ enrollment.student.id }}')">Chat</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="assignments" class="tab-content">
+        <div class="assignments-section">
+            <h2>Assignments</h2>
+            <button class="create-btn" onclick="createAssignment()">Create Assignment</button>
+            <div class="assignment-list">
+                {% for assignment in course.assignments %}
+                <div class="assignment-card">
+                    <h3>{{ assignment.title }}</h3>
+                    <p>{{ assignment.description }}</p>
+                    <p>Due: {{ assignment.due_date }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div id="announcements" class="tab-content">
+        <div class="announcements-section">
+            <h2>Announcements</h2>
+            <button class="create-btn" onclick="createAnnouncement()">Make Announcement</button>
+            <div class="announcement-list">
+                {% for announcement in course.announcements %}
+                <div class="announcement-card">
+                    <h3>{{ announcement.title }}</h3>
+                    <p>{{ announcement.content }}</p>
+                    <small>Posted: {{ announcement.created_at }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div id="materials" class="tab-content">
+        <div class="materials-section">
+            <h2>Course Materials</h2>
+            <button class="create-btn" onclick="uploadMaterial()">Upload Material</button>
+            <div class="material-list">
+                {% for material in course.materials %}
+                <div class="material-card">
+                    <h3>{{ material.title }}</h3>
+                    <p>{{ material.description }}</p>
+                    <a href="{{ url_for('static', filename=material.file_path) }}" download>Download</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div id="assignmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('assignmentModal')">&times;</span>
+            <h2>Create New Assignment</h2>
+            <form action="{{ url_for('teacher_routes.create_assignment', course_id=course.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="due_date">Due Date</label>
+                    <div class="date-time-container">
+                        <div class="date-input">
+                            <input type="date" id="due_date" name="due_date" required>
+                        </div>
+                        <div class="time-input">
+                            <input type="time" id="due_time" name="due_time" value="23:59" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="attachment">Attachment (optional)</label>
+                    <div class="file-upload">
+                        <input type="file" id="attachment" name="attachment">
+                        <label for="attachment" class="file-upload-label">Choose File</label>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Create Assignment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div id="announcementModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('announcementModal')">&times;</span>
+            <h2>Create New Announcement</h2>
+            <form action="{{ url_for('teacher_routes.create_announcement', course_id=course.id) }}" method="POST">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="content">Content</label>
+                    <textarea id="content" name="content" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Post Announcement</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Material Upload Modal -->
+    <div id="materialModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('materialModal')">&times;</span>
+            <h2>Upload Course Material</h2>
+            <form action="{{ url_for('teacher_routes.upload_material', course_id=course.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="file">File</label>
+                    <div class="file-upload">
+                        <input type="file" id="file" name="file" required>
+                        <label for="file" class="file-upload-label">Choose File</label>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Upload Material</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openTab(tabName) {
+    var tabs = document.getElementsByClassName('tab-content');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+    }
+    var buttons = document.getElementsByClassName('tab-button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+    document.getElementById(tabName).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function copyClassCode() {
+    const classCode = '{{ course.class_code }}';
+    navigator.clipboard.writeText(classCode).then(() => {
+        const copyBtn = document.querySelector('.copy-btn');
+        copyBtn.innerHTML = '<i class="material-icons">done</i>';
+        setTimeout(() => {
+            copyBtn.innerHTML = '<i class="material-icons">content_copy</i>';
+        }, 2000);
+    });
+}
+
+function viewMarks(studentId) {
+    window.location.href = `/course/{{ course.id }}/student/${studentId}/marks`;
+}
+
+function modifyAttendance(studentId) {
+    window.location.href = `/course/{{ course.id }}/student/${studentId}/attendance`;
+}
+
+function openChat(studentId) {
+    window.location.href = `/chat/student/${studentId}`;
+}
+
+function createAssignment() {
+    document.getElementById('assignmentModal').style.display = 'block';
+}
+
+function createAnnouncement() {
+    document.getElementById('announcementModal').style.display = 'block';
+}
+
+function uploadMaterial() {
+    document.getElementById('materialModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

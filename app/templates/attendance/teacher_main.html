@@ -1,0 +1,201 @@
+{% extends "base.html" %} {# Or your teacher dashboard base template #}
+{% block title %}Manage Attendance{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Link to your main dashboard CSS and potentially course CSS #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}"> {# Using course.css for card styling #}
+<style>
+    /* Add specific styles for the attendance page */
+    .attendance-course-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column; /* Stack content vertically */
+        gap: 1rem; /* Space between elements */
+    }
+    .course-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start; /* Align items top */
+        flex-wrap: wrap; /* Allow wrapping */
+        gap: 1rem;
+    }
+    .course-card-header h3 {
+        margin: 0;
+        color: #333;
+        flex-grow: 1; /* Allow title to take space */
+    }
+    .course-details p {
+        margin: 0 0 0.3rem 0;
+        color: #555;
+        font-size: 0.9rem;
+    }
+    .course-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap; /* Allow buttons to wrap */
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+    .course-actions form {
+        margin: 0; /* Remove default form margin */
+    }
+    .btn-attendance {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    .btn-start {
+        background-color: #28a745; /* Green */
+        border-color: #28a745;
+        color: white;
+    }
+    .btn-start:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    .btn-end {
+        background-color: #dc3545; /* Red */
+        border-color: #dc3545;
+        color: white;
+    }
+     .btn-end:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    .btn-modify {
+        background-color: #ffc107; /* Yellow */
+        border-color: #ffc107;
+        color: #212529;
+    }
+    .btn-modify:hover {
+        background-color: #e0a800;
+        border-color: #d39e00;
+    }
+    .session-status {
+        font-style: italic;
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+     .session-status.active {
+        color: #28a745;
+        font-weight: bold;
+     }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {# Include the standard teacher sidebar - Adapt path if needed #}
+    <aside class="sidebar">
+        <div class="user-card"> {# Use user-card instead of user-info #}
+            <div class="avatar"> {# Assuming you have an avatar div #}
+                {% if current_user.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile Picture">
+                {% else %}
+                    <span class="material-icons">account_circle</span>
+                {% endif %}
+            </div>
+            <div class="user-info"> {# Keep user-info for text #}
+                <h2>{{ current_user.username }}</h2>
+                <p class="role-badge">Teacher</p> {# Assuming role-badge class exists #}
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+            {# Add other nav items as needed, e.g., Dashboard, Courses #}
+            <a href="{{ url_for('teacher_routes.teacher_dashboard') }}" class="nav-item">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+             <a href="{{ url_for('teacher_routes.manage_attendance') }}" class="nav-item active"> {# Mark as active #}
+                <span class="material-icons">schedule</span> Attendance
+            </a>
+            <a href="#assignments" class="nav-item"> {# Update href if you have a dedicated assignments page #}
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">chat</span> Chat
+            </a>
+            <a href="{{ url_for('teacher_routes.profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Manage Attendance</h1>
+        <p>Start or stop attendance sessions for your courses.</p>
+
+        {# Display Flash Messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages" style="margin-bottom: 1rem;">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if courses %}
+            {% for course in courses %}
+            <div class="attendance-course-card">
+                <div class="course-card-header">
+                    <h3>{{ course.name }}</h3>
+                    {# Check if a session is active for this course #}
+                    {% set active_session = course.active_attendance_session %}
+                    {% if active_session %}
+                        <span class="session-status active">
+                            Session active since: {{ active_session.start_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+                        </span>
+                    {% else %}
+                        <span class="session-status">No active session</span>
+                    {% endif %}
+                </div>
+                <div class="course-details">
+                    <p>Class: {{ course.class_number }} | Session: {{ course.session }} | Semester: {{ course.semester }}</p>
+                </div>
+                <div class="course-actions">
+                    {% if active_session %}
+                        {# Show End Attendance Button #}
+                        <form action="{{ url_for('teacher_routes.end_attendance', course_id=course.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-attendance btn-end">
+                                <span class="material-icons">stop_circle</span> End Session
+                            </button>
+                        </form>
+                    {% else %}
+                        {# Show Start Attendance Button #}
+                        <form action="{{ url_for('teacher_routes.start_attendance', course_id=course.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-attendance btn-start">
+                                <span class="material-icons">play_circle</span> Start Session
+                            </button>
+                        </form>
+                    {% endif %}
+                    {# Button to view/modify records (links to placeholder route for now) #}
+                    <a href="{{ url_for('teacher_routes.view_attendance_records', course_id=course.id) }}" class="btn btn-attendance btn-modify">
+                        <span class="material-icons">edit_note</span> View/Modify Records
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>You are not teaching any courses yet. <a href="{{ url_for('teacher_routes.create_course') }}">Create a course</a> to manage attendance.</p>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+ {{ super() }}
+ {# Add specific JS if needed, e.g., for Socket.IO updates later #}
+{% endblock %}

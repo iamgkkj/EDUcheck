@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Teacher Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-pic-large">
+            {% if current_user.profile_pic %}
+                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile Picture">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Profile Picture">
+            {% endif %}
+        </div>
+        <h1>{{ current_user.username }}</h1>
+        <span class="role-badge">Teacher</span>
+    </div>
+
+    <div class="profile-details">
+        <div class="detail-section">
+            <h2>Personal Information</h2>
+            <div class="detail-item">
+                <label>Email:</label>
+                <span>{{ current_user.email }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Join Date:</label>
+                <span>{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h2>Teaching Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">{{ courses|length }}</span>
+                    <span class="stat-label">Active Courses</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ assignments|length }}</span>
+                    <span class="stat-label">Total Assignments</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

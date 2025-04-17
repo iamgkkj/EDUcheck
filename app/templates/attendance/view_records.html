@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}"> {# Using course.css for card styling #}
+<style>
+    .session-list-item {
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .session-details p {
+        margin: 0 0 0.2rem 0;
+        font-size: 0.95rem;
+        color: #333;
+    }
+     .session-details span {
+        font-weight: 500;
+        color: #555;
+     }
+    .session-actions .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        color: #5c6bc0;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    .back-link .material-icons {
+        vertical-align: middle;
+        font-size: 1.2em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {# Include the standard teacher sidebar #}
+    <aside class="sidebar">
+        {# Sidebar content copied from teacher_main.html or teacher_dash.html #}
+        <div class="user-card">
+            <div class="avatar">
+                {% if current_user.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile Picture">
+                {% else %}
+                    <span class="material-icons">account_circle</span>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="role-badge">Teacher</p>
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('teacher_routes.teacher_dashboard') }}" class="nav-item">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+             <a href="{{ url_for('teacher_routes.manage_attendance') }}" class="nav-item active"> {# Mark as active #}
+                <span class="material-icons">schedule</span> Attendance
+            </a>
+            <a href="#assignments" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">chat</span> Chat
+            </a>
+            <a href="{{ url_for('teacher_routes.profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <a href="{{ url_for('teacher_routes.manage_attendance') }}" class="back-link">
+            <span class="material-icons">arrow_back</span> Back to Attendance Management
+        </a>
+        <h1>Attendance Records for {{ course.name }}</h1>
+        <p>Select a past session to view or modify attendance records.</p>
+
+        {% if sessions %}
+            <div class="session-list">
+                {% for session in sessions %}
+                <div class="session-list-item">
+                    <div class="session-details">
+                        <p>Session Started: <span>{{ session.start_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</span></p>
+                        <p>Session Ended: <span>{{ session.end_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</span></p>
+                        {# Optionally calculate and display duration #}
+                    </div>
+                    <div class="session-actions">
+                        <a href="{{ url_for('teacher_routes.modify_attendance_session', session_id=session.id) }}" class="btn btn-primary">
+                            <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">edit</span> Modify This Session
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No past attendance sessions found for this course.</p>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

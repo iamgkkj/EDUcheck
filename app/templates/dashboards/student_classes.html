@@ -1,0 +1,198 @@
+{% extends "base.html" %} {# Changed from dashboards/base.html #}
+{% block title %}My Classes{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Add specific course styles if needed, or ensure they are in main.css #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/course.css') }}">
+{# Add new styles needed below #}
+<style>
+    .course-header {
+        display: flex; /* Use flexbox for layout */
+        justify-content: space-between; /* Push items to ends */
+        align-items: flex-start; /* Align items to the top */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        gap: 1rem; /* Add gap between title and join section */
+    }
+    .course-header-title {
+        flex-grow: 1; /* Allow title to take available space */
+    }
+    .join-class-section {
+        /* Remove default margin-bottom if any */
+        margin-bottom: 0;
+        text-align: right; /* Align content to the right */
+    }
+    /* Style the initial Join Class button */
+    .join-class-section > .btn-primary {
+         display: inline-flex; /* Align icon and text */
+         align-items: center;
+         gap: 0.5em; /* Space between icon and text */
+         margin-bottom: 0.5rem; /* Space before the form appears */
+    }
+    .join-class-form {
+        display: none; /* Keep hidden initially */
+        margin-top: 0.5rem; /* Add some space above */
+        padding: 1rem;
+        background-color: #f8f9fa; /* Light background */
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        min-width: 300px; /* Give it some width */
+        text-align: left; /* Align form content left */
+    }
+    /* Style the form elements within the popup */
+    .join-class-form .form-group {
+         margin-bottom: 1rem;
+    }
+    /* Use existing .form-control styles for input */
+    .join-class-form input.form-control {
+         /* Ensure it inherits styles, add specific overrides if needed */
+         padding: 0.75rem; /* Consistent padding */
+         font-size: 1rem;
+    }
+    .join-class-form label {
+         display: block;
+         margin-bottom: 0.3rem;
+         font-weight: 500;
+         color: #555;
+         font-size: 0.9rem;
+    }
+     /* Style the submit button inside the form */
+    .join-class-form .btn-primary {
+         width: 100%; /* Make button full width */
+         padding: 0.75rem;
+    }
+    .join-class-form .error span {
+        font-size: 0.85rem;
+        color: #dc3545; /* Red for errors */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{# Use the same dashboard container and sidebar structure as student_dash.html #}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        {# Include the user card and navigation identical to student_dash.html #}
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav">
+            {# Make sure the 'active' class is applied correctly #}
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item active">
+                <span class="material-icons">class</span> Classes
+            </a>
+            <a href="#attendance" class="nav-item">
+                <span class="material-icons">how_to_reg</span> Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">forum</span> Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="course-container">
+            {# --- MODIFIED HEADER --- #}
+            <div class="course-header">
+                <div class="course-header-title"> {# Wrap title part #}
+                    <h1>My Classes</h1>
+                    <p>View and manage your enrolled classes</p>
+                </div>
+                {# Moved join section here #}
+                <div class="join-class-section">
+                    <button class="btn btn-primary" onclick="showJoinClassForm()"> {# Added 'btn' class #}
+                        <span class="material-icons">add</span>
+                        <span>Join Class</span> {# Wrap text in span for potential styling #}
+                    </button>
+                    <div id="joinClassForm" class="join-class-form">
+                        <form action="{{ url_for('student_routes.join_class') }}" method="POST">
+                            {{ form.hidden_tag() }}
+                            <div class="form-group">
+                                <label for="class_code">Enter Class Code</label>
+                                {# Apply form-control class for styling #}
+                                {{ form.class_code(class="form-control", placeholder="ABCXYZ") }}
+                                {% if form.class_code.errors %}
+                                <div class="error">
+                                    {% for error in form.class_code.errors %}<span>{{ error }}</span>{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {# Apply btn and btn-primary classes #}
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                     {# Flash messages specifically for joining #}
+                    {% with messages = get_flashed_messages(category_filter=['success', 'error', 'warning']) %}
+                        {% if messages %}
+                            <div style="margin-top: 10px;">
+                            {% for message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            
+            <div class="enrolled-classes">
+                <h3>Your Classes</h3>
+                {% if enrollments %}
+                <div class="classes-grid">
+                    {% for enrollment in enrollments %}
+                    <div class="class-card">
+                        <h4>{{ enrollment.course.name }}</h4>
+                        <p>Class Number: {{ enrollment.course.class_number }}</p>
+                        <p>Session: {{ enrollment.course.session }}</p>
+                        <p>Semester: {{ enrollment.course.semester }}</p>
+                        <p>Teacher: {{ enrollment.course.teacher.username }}</p>
+                        <div class="class-actions">
+                            <a href="{{ url_for('student_routes.view_course', course_id=enrollment.course_id) }}" class="btn btn-primary">
+                                <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">visibility</span> View Course
+                            </a>
+                            {# Change btn-secondary to btn-primary #}
+                            <a href="{{ url_for('chat_routes.start_or_get_chat', teacher_id=enrollment.course.teacher_id) }}" class="btn btn-primary">
+                                <span class="material-icons" style="vertical-align: middle; font-size: 1.1em;">forum</span> Chat with Teacher
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                 {% else %}
+                    <p>You are not enrolled in any classes yet. Use the 'Join Class' button to enroll.</p>
+                 {% endif %}
+            </div>
+        </div>
+
+        <script>
+        function showJoinClassForm() {
+            const form = document.getElementById('joinClassForm');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+        </script>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+ {{ super() }}
+ {# Add specific JS if needed #}
+{% endblock %}

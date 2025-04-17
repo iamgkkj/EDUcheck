@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{# Add specific styles if needed #}
+<style>
+    .webcam-container {
+        max-width: 640px; /* Adjust as needed */
+        margin: 1rem auto;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    #video {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        margin-bottom: 1rem;
+        background-color: #eee; /* Placeholder bg */
+        transform: scaleX(-1); /* Mirror view */
+    }
+    #canvas {
+        display: none; /* Hidden canvas for frame capture */
+    }
+    .capture-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    #status-message {
+        margin-top: 1rem;
+        font-weight: bold;
+    }
+    .status-success { color: #28a745; }
+    .status-error { color: #dc3545; }
+    .status-info { color: #17a2b8; }
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        color: #5c6bc0;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    .back-link .material-icons {
+        vertical-align: middle;
+        font-size: 1.2em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {# Include the standard student sidebar #}
+    <aside class="sidebar">
+        {# Sidebar content copied from student_dash.html #}
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span> Assignments
+            </a>
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item">
+                <span class="material-icons">class</span> Classes
+            </a>
+            <a href="{{ url_for('student_routes.manage_attendance') }}" class="nav-item active"> {# Active Link #}
+                <span class="material-icons">how_to_reg</span> Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">forum</span> Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item">
+                <span class="material-icons">person</span> Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+         <a href="{{ url_for('student_routes.manage_attendance') }}" class="back-link">
+            <span class="material-icons">arrow_back</span> Back to Attendance
+        </a>
+        <h1>Register Your Face ID</h1>
+        <p>Look directly into the camera and capture a clear image of your face.</p>
+
+        <div class="webcam-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <button id="capture-btn" class="btn btn-primary capture-button">
+                <span class="material-icons" style="vertical-align: middle;">photo_camera</span> Capture & Register
+            </button>
+            <div id="status-message"></div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{# Link to the updated face capture/recognition JS file #}
+<script src="{{ url_for('static', filename='js/face_capture.js') }}"></script>
+{% endblock %}

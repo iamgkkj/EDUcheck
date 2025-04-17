@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Student Chat{% endblock %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span>
+                Assignments
+            </a>
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item">
+                <span class="material-icons">class</span>
+                Classes
+            </a>
+            <a href="#attendance" class="nav-item">
+                <span class="material-icons">how_to_reg</span>
+                Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item active">
+                <span class="material-icons">forum</span>
+                Chat
+            </a>
+            <a href="#profile" class="nav-item">
+                <span class="material-icons">person</span>
+                Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                {# --- NEW SEARCH BAR --- #}
+                <div class="chat-search-bar">
+                    <input type="text" id="teacher-search-input" placeholder="Search teachers...">
+                    <span class="material-icons search-icon">search</span>
+                </div>
+                {# --- END SEARCH BAR --- #}
+                <div class="chat-list">
+                    {% for chat in chats %}
+                    <a href="{{ url_for('chat_routes.chat_interface', chat_id=chat.id) }}"
+                       class="chat-item {% if active_chat and active_chat.id == chat.id %}active{% endif %}"
+                       data-chat-id="{{ chat.id }}">
+                        <div class="chat-preview">
+                            <div class="chat-avatar-small list-avatar">
+                                <span class="material-icons">account_circle</span>
+                           </div>
+                           <div class="chat-item-info">
+                                <h4 class="chat-item-name">{{ chat.teacher.username }}</h4>
+                                <p class="last-message">
+                                    {% set last_message = chat.messages | sort(attribute='created_at', reverse=True) | first %}
+                                    {% if last_message %}
+                                        {% if last_message.sender == current_user %}
+                                            You: {{ last_message.content|truncate(25) }}
+                                        {% else %}
+                                            {{ chat.teacher.username }}: {{ last_message.content|truncate(25) }}
+                                        {% endif %}
+                                    {% else %}
+                                        No messages yet
+                                    {% endif %}
+                                </p>
+                           </div>
+                        </div>
+                        <span class="unread-badge" {% if not chat.unread_count or chat.unread_count == 0 %}style="display: none;"{% endif %}>
+                            {{ chat.unread_count }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="chat-main">
+                <div class="chat-header">
+                    {% if active_chat %}
+                        {# Add profile pic placeholder #}
+                        <div class="chat-avatar-small">
+                            {# TODO: Add logic to show actual teacher profile pic if available #}
+                            <span class="material-icons">account_circle</span>
+                        </div>
+                        <h3>{{ active_chat.teacher.username }}</h3>
+                    {% else %}
+                        <h3>Select a teacher to start messaging</h3>
+                    {% endif %}
+                </div>
+
+                <div class="messages" id="messages" data-chat-id="{{ active_chat.id if active_chat }}">
+                    {% if active_chat %}
+                    {% for message in active_chat.messages %}
+                    <div class="message {% if message.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                        <div class="message-header">
+                            <strong>{{ message.sender.username }}</strong>
+                            <span class="time">{{ message.created_at.astimezone(timezone('Asia/Kolkata')).strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="message-content">
+                            {{ message.content }}
+                            {% if message.attachment_path %}
+                            <div class="attachment">
+                                <a href="{{ message.attachment_url }}"
+                                   class="file-link"
+                                   target="_blank">
+                                    <i class="material-icons">attach_file</i>
+                                    {{ message.attachment_path.split('_')[-1] if '_' in message.attachment_path else message.attachment_path.split('/')[-1] }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+
+                {% if active_chat %}
+                <form id="message-form" class="message-input" enctype="multipart/form-data">
+                    <div class="input-group">
+                        <input type="text" id="message-input" name="message" placeholder="Type your message..." required>
+                        <label class="file-upload">
+                            <input type="file" id="file-input" name="attachment" hidden>
+                            <i class="material-icons">attach_file</i>
+                        </label>
+                        <button type="submit" class="send-btn">
+                            <i class="material-icons">send</i>
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const currentUserId = {{ current_user.id }};
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script>
+    const socket = io();
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const messagesContainer = document.getElementById('messages');
+    const currentChatId = messagesContainer ? parseInt(messagesContainer.dataset.chatId) : null;
+
+    socket.on('connect', () => {
+        console.log('Connected to WebSocket');
+    });
+
+    socket.on('new_message', (data) => {
+        if (currentChatId !== null && data.chat_id === currentChatId) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (data.sender_id === currentUserId) {
+                messageDiv.classList.add('sent');
+            } else {
+                messageDiv.classList.add('received');
+            }
+
+            const headerDiv = document.createElement('div');
+            headerDiv.classList.add('message-header');
+            const senderStrong = document.createElement('strong');
+            senderStrong.textContent = data.sender_username;
+            const timeSpan = document.createElement('span');
+            const date = new Date(data.created_at);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            timeSpan.classList.add('time');
+            timeSpan.textContent = `${hours}:${minutes}`;
+            headerDiv.appendChild(senderStrong);
+            headerDiv.appendChild(timeSpan);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
+            contentDiv.textContent = data.content;
+
+            messageDiv.appendChild(headerDiv);
+            messageDiv.appendChild(contentDiv);
+
+            if (data.attachment_url) {
+                const attachmentDiv = document.createElement('div');
+                attachmentDiv.classList.add('attachment');
+                const attachmentLink = document.createElement('a');
+                attachmentLink.href = data.attachment_url;
+                attachmentLink.classList.add('file-link');
+                attachmentLink.target = '_blank';
+                const attachIcon = document.createElement('i');
+                attachIcon.classList.add('material-icons');
+                attachIcon.textContent = 'attach_file';
+                const filename = data.attachment_url.split('/').pop();
+                attachmentLink.appendChild(attachIcon);
+                attachmentLink.appendChild(document.createTextNode(' ' + filename));
+                attachmentDiv.appendChild(attachmentLink);
+                contentDiv.appendChild(attachmentDiv);
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+        }
+    });
+
+    if (messageForm) {
+        messageForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const message = messageInput.value.trim();
+            const attachment = document.getElementById('file-input').files[0];
+            const formData = new FormData();
+            formData.append('message', message);
+            if (attachment) {
+                formData.append('attachment', attachment);
+            }
+
+            if (message || attachment) {
+                fetch(`/chat/${currentChatId}/send`, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        messageInput.value = '';
+                        document.getElementById('file-input').value = ''; // Clear file input
+                        // The 'new_message' event will handle displaying the message
+                    } else {
+                        console.error('Error sending message:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                });
+            }
+        });
+    }
+
+    // Scroll to the bottom of the chat on load
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>
+{% endblock %}

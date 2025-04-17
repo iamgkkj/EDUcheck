@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Add specific profile styles if needed, maybe copy from teacher_profile or create new #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}"> {# Assuming you create profile.css #}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        {# Include the user card and navigation identical to student_dash.html #}
+        <div class="user-card">
+            <div class="avatar">
+                <span class="material-icons">account_circle</span>
+            </div>
+            <div class="user-info">
+                <h2>{{ current_user.username }}</h2>
+                <p class="badge student-badge">Student</p>
+            </div>
+        </div>
+
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('student_routes.student_dashboard') }}" class="nav-item">
+                <span class="material-icons">assignment</span>
+                Assignments
+            </a>
+            <a href="{{ url_for('student_routes.student_classes') }}" class="nav-item">
+                <span class="material-icons">class</span>
+                Classes
+            </a>
+            <a href="#attendance" class="nav-item"> {# Link attendance section later #}
+                <span class="material-icons">how_to_reg</span>
+                Attendance
+            </a>
+            <a href="{{ url_for('chat_routes.chat_interface') }}" class="nav-item">
+                <span class="material-icons">forum</span>
+                Chat
+                <span class="nav-unread-badge" style="display: none; margin-left: 8px; background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7em;"></span>
+            </a>
+            <a href="{{ url_for('student_routes.student_profile') }}" class="nav-item active"> {# Set this as active #}
+                <span class="material-icons">person</span>
+                Profile
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        {# Content similar to teacher_profile.html, adapted for student #}
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-pic-large">
+                    {# Add logic for student profile pic if you implement it #}
+                    <span class="material-icons" style="font-size: 80px;">account_circle</span>
+                </div>
+                <h1>{{ current_user.username }}</h1>
+                <span class="role-badge student-badge">Student</span>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-section">
+                    <h2>Personal Information</h2>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>{{ current_user.email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Join Date:</label>
+                        <span>{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    {# Add more fields if needed - e.g., Change Password link #}
+                     <div class="detail-item">
+                         <a href="{{ url_for('auth.password_reset_request') }}">Request Password Reset</a>
+                     </div>
+                     {# Add Face Registration link if using face_auth #}
+                     {# <div class="detail-item"> #}
+                     {#    <a href="{{ url_for('auth.face_register_page') }}">Register Face ID</a> #}
+                     {# </div> #}
+                </div>
+
+                <div class="detail-section">
+                    <h2>Academic Summary</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            {# Fetch enrolled courses count #}
+                            <span class="stat-number">{{ enrolled_courses_count }}</span>
+                            <span class="stat-label">Enrolled Courses</span>
+                        </div>
+                        <div class="stat-item">
+                             {# Fetch submitted assignments count #}
+                            <span class="stat-number">{{ submitted_assignments_count }}</span>
+                            <span class="stat-label">Submitted Assignments</span>
+                        </div>
+                         {# Add more stats like average grade, attendance % later #}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+ {{ super() }}
+ {# Add specific JS if needed #}
+{% endblock %}  
